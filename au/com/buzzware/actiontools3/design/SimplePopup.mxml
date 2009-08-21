@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:atd="au.com.buzzware.actiontools3.design.*" 
+ 	showCloseButton="false"
+	width="400"
+	height="300"
+ 	borderAlpha="1"		
+ 	backgroundAlpha="1"
+ 	backgroundColor="white"
+ 	roundedBottomCorners="true"
+ 	cornerRadius="10"
+
+ 	borderThickness="0" 
+ 	borderThicknessBottom="10" 
+ 	borderThicknessLeft="10" 
+ 	borderThicknessRight="10" 
+ 	borderThicknessTop="0"
+ 	borderStyle="solid"
+
+	paddingBottom="0"
+	paddingLeft="0"
+	paddingRight="0"
+	paddingTop="10"
+ 	headerHeight="20"
+
+ 	verticalGap="0" 
+  dropShadowEnabled="true"
+ 	footerColors="null"
+ 	headerColors="null"
+ 	
+ 	horizontalScrollPolicy="off"
+ 	verticalScrollPolicy="off"
+
+ 	creationComplete="creationCompleteHandler(event)"
+>
+<mx:Script>
+	<![CDATA[
+
+/*
+
+ 	cornerRadius="10"
+	width="400"
+	height="300"
+    roundedBottomCorners="true" 
+
+ 	backgroundAlpha="1"
+ 	borderAlpha="1"
+ */
+
+
+
+
+		import mx.core.UIComponent;
+		import mx.managers.PopUpManager;
+		import mx.events.CloseEvent;
+
+        //--------------------------------------
+        //  Excluded APIs
+        //--------------------------------------
+        
+		public static function ShowModal(aParent: DisplayObject, aClass: Class): SimplePopup {
+			var result: SimplePopup = mx.managers.PopUpManager.createPopUp(aParent as DisplayObject, aClass, true ) as SimplePopup;
+			PopUpManager.centerPopUp(result);
+			return result;	
+		}
+		
+		public static function ShowModalContent(aParent: DisplayObject, aContent: UIComponent): SimplePopup {
+			var result: SimplePopup = mx.managers.PopUpManager.createPopUp(aParent as DisplayObject, SimplePopup, true ) as SimplePopup;
+			result.addChild(aContent);
+			PopUpManager.centerPopUp(result);
+			return result;	
+		}
+		
+ 		private static var classConstructed:Boolean = classConstruct();
+		private static function classConstruct():Boolean {
+			if (classConstructed)
+				return true;
+				var styles:CSSStyleDeclaration = StyleManager.getStyleDeclaration("SimplePopup") || new CSSStyleDeclaration(); 
+				styles.defaultFactory = function():void {
+					this.backgroundAlpha = 1;	// if these aren't the same, an extra shadow appears
+					this.borderAlpha = 1;			// if these aren't the same, an extra shadow appears
+					this.width = 400;
+					this.height = 300;
+					this.backgroundColor = 0xFFFFFF;
+					this.cornerRadius = 10;
+					this.roundedBottomCorners = true;
+
+					this.borderThickness = 0;
+					this.borderThicknessBottom = 10;
+					this.borderThicknessLeft = 10;
+					this.borderThicknessRight = 10;
+					this.borderThicknessTop = 10;
+					this.borderStyle = "solid";
+
+					this.paddingTop = 10;
+					this.paddingBottom = 0;
+					this.paddingLeft = 0;
+					this.paddingRight = 0;
+					this.headerHeight = 20;
+					
+					this.verticalGap = 0;
+					this.dropShadowEnabled = true;
+ 					this.footerColors = null;
+ 					this.headerColors = null;
+
+/* 				
+				
+				this.cornerRadius = 0;
+				this.dropShadowEnabled = false;
+				
+ */			
+ 				}
+			StyleManager.setStyleDeclaration("SimplePopup", styles, true);
+			return true;
+		}
+		
+		private function creationCompleteHandler(aEvent: Event): void {
+			var me: SimplePopup = this;
+			addEventListener(
+				CloseEvent.CLOSE,
+				function(aEvent: Event): void {
+					PopUpManager.removePopUp(me);		
+				}
+			);
+		}
+		
+		public function close(aResult: int): void {
+			dispatchEvent(new CloseEvent(CloseEvent.CLOSE,true,true,aResult));
+		}
+	]]>
+</mx:Script>	
+</mx:TitleWindow>

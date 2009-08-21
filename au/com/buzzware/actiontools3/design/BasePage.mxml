@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<atd:SimplePanel
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:atd="au.com.buzzware.actiontools3.design.*" 
+	xmlns:atc="au.com.buzzware.actiontools3.code.*"
+	initialize="addEventListener(PageEvent.RESET,__pageResetHandler,false,99999)"
+>
+<mx:Metadata>
+[Event(name='gotoPage', type='au.com.buzzware.actiontools3.code.PageTrigger')]
+[Event(name='backPage', type='au.com.buzzware.actiontools3.code.PageTrigger')]
+[Event(name='pageIn', type='au.com.buzzware.actiontools3.code.PageEvent')]
+[Event(name='pageOut', type='au.com.buzzware.actiontools3.code.PageEvent')]
+[Event(name='pageReset', type='au.com.buzzware.actiontools3.code.PageEvent')]
+</mx:Metadata>
+
+<mx:Script><![CDATA[
+	import au.com.buzzware.actiontools3.code.MiscUtils;
+	import au.com.buzzware.actiontools3.code.PageEvent
+	import mx.events.DynamicEvent
+	import mx.core.Container
+	import mx.core.UIComponent
+
+	public var options: Object = {};
+	
+	/*
+	Page created : 			creationComplete, options always empty
+	Page reset: 				pageReset(options)
+	After in transition: 	pageIn
+	Before out transition: 	pageOut
+	Page destroyed:			
+	*/
+
+	private function __pageResetHandler(aEvent: PageEvent): void {
+		//MiscUtils.TraceEvent(aEvent,'BasePage __pageResetHandler:')
+		if (aEvent.target!=this)
+			return
+		this.options = aEvent.options || {}
+	}
+		
+]]>
+</mx:Script>	
+</atd:SimplePanel>

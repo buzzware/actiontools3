@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+The properties below are set in both the mxml and creationCompleteHandler because of an apparent bug where 
+MXML attributes are ignored at runtime when components inherit from SimplePanel, and so the borders etc appear 
+from mx:Panel. They are still given in the MXML to enable correct appearance at design time.
+
+When disabled, overlay uses backgroundDisabledColor & disabledOverlayAlpha
+
+-->
+<mx:Panel
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	backgroundColor="black"
+	borderThickness="0"
+	borderThicknessBottom="0"
+	borderThicknessLeft="0"
+	borderThicknessRight="0"
+	borderThicknessTop="0"
+	borderStyle="none"
+	cornerRadius="0"
+	dropShadowEnabled="false"
+	headerHeight="0"
+
+>
+<mx:Script><![CDATA[
+
+//	creationComplete="creationCompleteHandler(event)"  
+
+	private static var classConstructed:Boolean = classConstruct();
+	private static function classConstruct():Boolean {
+		if (classConstructed)
+			return true;
+		var styles:CSSStyleDeclaration = StyleManager.getStyleDeclaration("SimplePanel") || new CSSStyleDeclaration(); 
+		styles.defaultFactory = function():void {
+			this.backgroundColor = 0
+			this.borderThickness = 0
+			this.borderThicknessBottom = 0
+			this.borderThicknessLeft = 0
+			this.borderThicknessRight = 0
+			this.borderThicknessTop = 0
+			this.borderStyle = "none"
+			this.cornerRadius = 0
+			this.dropShadowEnabled = false
+			this.headerHeight = 0
+		}
+		StyleManager.setStyleDeclaration("SimplePanel", styles, true);
+		return true;
+	}
+
+]]></mx:Script>
+</mx:Panel>
+				
+ 

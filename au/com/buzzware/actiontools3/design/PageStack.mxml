@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ViewStack
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="au.com.buzzware.actiontools3.design.*" 
+	initialize="__initializeHandler(event)"
+	childAdd="__childaddHandler(event)"
+	childRemove="__childRemoveHandler(event)"
+	add="__addHandler(event)"
+	creationComplete="__creationCompleteHandler(event)"
+	change="MiscUtils.TraceEvent(event)"
+>
+<!--
+
+	App may call gotoPage or fire PageTrigger.Goto, which may fire RejectPage 
+	event (with usual page change events).
+
+-->
+<!-- Support for PageStack to listen to page''s IN,OUT and RESET was removed. May be added later. -->
+<!-- There was an issue with trigering a non-bubbling event on the PageStack with the target set to the page -->
+<mx:Metadata>
+[Event(name='gotoPage', type='au.com.buzzware.actiontools3.code.PageTrigger')]
+[Event(name='backPage', type='au.com.buzzware.actiontools3.code.PageTrigger')]
+</mx:Metadata>
+<mx:Script>
+	<![CDATA[
+		import mx.events.FlexEvent;
+		import au.com.buzzware.actiontools3.code.MiscUtils;
+		import mx.events.ChildExistenceChangedEvent;
+		import au.com.buzzware.actiontools3.code.RoleSecurity
+		import au.com.buzzware.actiontools3.code.PageEvent
+		import au.com.buzzware.actiontools3.code.PageTrigger
+		import mx.events.DynamicEvent
+		import mx.core.Container
+		import mx.core.UIComponent
+
+		protected var history: Array = []
+	
+		public var rejectPageId: String									// page to reject to on role failure
+		public var listenOnParent: Boolean									// page to reject to on role failure
+		//public var changePageFunction: Function = null 			// to do trigger page turning effects. page must change
+		public var effectFunction: Function = null 
+		public var rejectPageFunction: Function = null
+		public var pageRolesFunction: Function = null			
+		//public var rejectPageIndex: int
+		public var strictSecurity: Boolean = false
+		public var ignoreGotoSamePage: Boolean = false
+	
+		public function __initializeHandler(aEvent: Event): void {
+			addEventListener(PageTrigger.GOTO,__gotoPageHandler)
+			addEventListener(PageTrigger.BACK,__backPageHandler)
+/*
+			var me:PageStack = this;
+ 			addEventListener(
+				FlexEvent.CREATION_COMPLETE,
+				function(aEvent: Event):void {
+					MiscUtils.TraceEvent(aEvent)
+					var ch:BasePage = aEvent.target as BasePage
+					if (ch && ch.parent==me) {
+						trace('got child')
+						callLater(function():void {
+						})
+					}
+				},
+				true
+			)
+ */		}
+		
+		protected function __childaddHandler(aEvent: ChildExistenceChangedEvent): void {
+			//trace('childAdd '+UIComponent(aEvent.relatedObject).id)
+			//aEvent.relatedObject.addEventListener(PageTrigger.GOTO,__gotoPageHandler)
+			//aEvent.relatedObject.addEventListener(PageTrigger.BACK,__backPageHandler)
+		}
+		
+		protected function __childRemoveHandler(aEvent: ChildExistenceChangedEvent): void {
+			//trace('childRemove '+UIComponent(aEvent.relatedObject).id)
+			//aEvent.relatedObject.removeEventListener(PageTrigger.GOTO,__gotoPageHandler)
+			//aEvent.relatedObject.removeEventListener(PageTrigger.BACK,__backPageHandler)
+		}
+
+		protected function __addHandler(aEvent: Event): void {
+			if (listenOnParent)
+				parent.addEventListener(
+					PageTrigger.GOTO,
+					__gotoPageHandler
+				)
+		}
+		
+		protected function __creationCompleteHandler(aEvent: Event): void {
+			//trace('PageStack __creationCompleteHandler: PageEvent.Reset (on first page)')
+			//resetStack(); // commented this out 12/3/09 as it causes problems when going to a newly created page
+		}
+
+		public function resetStack(): void {
+			changePage(0,null,false,selectedIndex!=0)
+			callLater(clearHistory)
+		}
+
+		public function clearHistory(): void {
+			history.length = 0	//clears array
+			history.push({
+				id: 		selectedChild.id,
+				options: 	selectedChild is BasePage ? BasePage(selectedChild).options : null
+			})
+		}
+
+		protected var _pageChanging: Boolean = false
+		
+		public function get pageChanging(): Boolean {
+			return _pageChanging
+		}
+
+		protected static function highestNotCreated(aStart: UIComponent): UIComponent {
+			if (!aStart)
+				return null;
+			var curr: UIComponent = aStart as UIComponent
+			var next: UIComponent = aStart.parent as UIComponent
+			while (next!=null && !next.initialized) {
+				curr = next
+				next = next.parent as UIComponent
+			}
+			return curr
+		}
+		
+		protected function changePage(aIndex: int, aOptions: Object = null, aDoEffect: Boolean = true, aPageOutEvent: Boolean = true): void {
+			if (pageChanging)
+				throw new Error("Attempted to change page on PageStack "+this.name+" while already changing page. Should use PageEvent.Goto or callLater()");
+			try {
+				_pageChanging = true				
+				aOptions ||= {}
+				//if (changePageFunction != null) {
+				//	changePageFunction(this,aIndex);
+				//} else {
+					var me: PageStack = this
+	
+					//(this.getChildAt(aIndex) as Container).createComponentsFromDescriptors()	// !!! still doesn't create instantly
+					//this.createComponentFromDescriptor(childDescriptors[aIndex],true)
+					
+					//this.selectedIndex = aIndex;
+					if (aPageOutEvent)
+						PageEvent.Out(this.selectedChild,false)
+	
+					var toPage: Container = me.getChildAt(aIndex) as Container
+					
+					var toExisting: Boolean = toPage && toPage.initialized
+					var fnChange: Function = function(aEvent: Event = null): void {
+						trace('fnChange');
+						__resetPage(toPage,aOptions)
+						me.callLater(function(): void {
+							if (effectFunction!=null && aDoEffect) {
+								effectFunction(
+									me,
+									aIndex,
+									aOptions,
+									function():void {
+										PageEvent.In(me.selectedChild,false)		
+										me.selectedChild.callLater(function(): void {
+											_pageChanging = false
+										})
+									}
+								)
+							} else {
+								selectedIndex = aIndex
+								PageEvent.In(me.selectedChild,false)
+								me.selectedChild.callLater(function(): void {
+									_pageChanging = false
+								})
+							}
+						})					
+					}
+					
+					if (toExisting) {
+						fnChange.call()
+					} else {
+						// BEGIN OLD TRANSITION CODE
+						// This is how it was from the WebTeam repository, but doesn't seem to actually change pages.
+						// It might be trying to change the page and fire eg. reset event at the correct time, and the replacement code below
+						// may not do this correctly.
+						//
+						//toPage.addEventListener(
+						//	FlexEvent.INITIALIZE,									// wait for eg. page to initialize (initialize happens in outer->inner order, unlike create_complete)
+							//fnChange
+							
+						//	function(aEvent: FlexEvent): void {
+						//		var highest_constructing: UIComponent = highestNotCreated(toPage) //  find highest parent or self under construction. This fires CREATION_COMPLETE last
+						//		trace('PageStack INITIALIZE handler')
+						//		if (highest_constructing)
+						//			highest_constructing.addEventListener(FlexEvent.CREATION_COMPLETE,fnChange)		// attach reset method
+						//	}
+							
+						//);
+						//trace('toPage.createComponentsFromDescriptors()');
+						//toPage.initialize();   //createComponentsFromDescriptors();
+						//trace('toPage.createComponentsFromDescriptors()');
+						//me.selectedChild = toPage;
+						// END OLD TRANSITION CODE
+						toPage.createComponentsFromDescriptors();
+						toPage.callLater(function(): void {
+							fnChange();
+						});
+					}
+	 			//}
+	 		} catch (e: Error) {
+	 			_pageChanging = false
+	 		}
+		}
+
+		protected function rejectPage(aIndex: int): Boolean {
+			if (rejectPageFunction != null)
+				return rejectPageFunction(this,aIndex);
+			else {
+				if (aIndex>=0)
+					changePage(aIndex)
+				return false
+			}
+		}
+
+		private function __resetPage(aPage: Container, aOptions: Object = null): void {
+			//trace('__resetPage() launching callLater')
+			callLater(
+				function(): void {
+					//trace('__resetPage() dispatching to '+aPage.name)
+					aOptions ||= {}
+					if (aPage is BasePage) {
+						BasePage(aPage).options = aOptions
+						PageEvent.Reset(aPage,aOptions,false)
+					}
+				}
+			)
+		}
+		
+		protected function getRolesForPage(aPage: UIComponent): Array {
+			var roles: Array = aPage && aPage.hasOwnProperty('allowRoles') ? RoleSecurity.RolesArrayFromString(aPage['allowRoles']) : null;
+			if (!roles && pageRolesFunction!=null)
+				roles = pageRolesFunction(aPage.id)
+			return roles
+		}
+		
+		public function getChildIndexByName(aPageId: String): int {
+			if (!aPageId || aPageId=='')
+				return -1;
+			var c:UIComponent = getChildByName(aPageId) as UIComponent
+			return c ? getChildIndex(c) : -1
+		}
+
+		protected function __gotoPageHandler(aEvent: PageTrigger): void {
+			gotoPage(aEvent.page,aEvent.options)
+		}
+
+		protected function __backPageHandler(aEvent: PageTrigger): void {
+			backPage(aEvent.options)
+		}
+
+		public function gotoPage(aId: String, aOptions: Object = null, aStoreHistory: Boolean = true): Boolean {
+			trace(this.parent.name+'.'+this.name+' gotoPage "'+aId+'" {'+MiscUtils.DynamicPropertiesToString(aOptions,false)+'}')
+			if (ignoreGotoSamePage && selectedChild.id==aId)
+				return true;
+			if (pageChanging) {
+				trace("Attempted to change page on PageStack "+this.name+" while already changing page (Ignoring). Should use PageEvent.Goto or callLater()")
+				return false
+			}
+			aOptions ||= {}
+			var iPage: int = getChildIndexByName(aId)
+			var iRejectPage: int = getChildIndexByName(rejectPageId) // child with id=rejectPageId
+			if (iPage >= 0) {
+				var page_roles: Array = getRolesForPage(this.getChildAt(iPage) as UIComponent)
+				var page_has_roles: Boolean = page_roles && page_roles.length>0
+				//if ((!page_has_roles && !strictSecurity) || (page_has_roles && RoleSecurity.has_roles(page_roles)) && (pageChangeFilter==null || pageChangeFilter(page,options,page_roles)) {
+				if ((!page_has_roles && !strictSecurity) || (page_has_roles && RoleSecurity.has_roles(page_roles))) {
+					if (aStoreHistory) {
+						history.push({id: aId, options: aOptions})
+					}
+					changePage(iPage,aOptions)
+					return true
+				} else {
+					if (aStoreHistory && iRejectPage>=0)
+						history.push({id: rejectPageId, options: null})
+					return rejectPage(iRejectPage)
+				}
+			}
+			return false;
+		}
+
+		// goes back to the previous page in history. Options will be the original options passed 
+		// to gotoPage for that page, merged with any options provided here
+		public function backPage(aOptions: Object = null): Boolean {
+			if (history.length < 2)
+				return false;
+			var tos: Object = history.pop()
+			var dest: Object
+			if (tos.id==(selectedChild && selectedChild.id))
+				dest = history.pop();
+			else
+				dest = tos;
+			aOptions = MiscUtils.merge_dynamic_properties(dest.options,aOptions)
+			gotoPage(dest.id,aOptions)
+			return true
+		}
+		
+	]]>
+</mx:Script>	
+</mx:ViewStack>
+

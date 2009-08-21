@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="640" height="480" borderStyle="none" backgroundColor="white" >
+	<mx:Script>
+		<![CDATA[
+			import mx.charts.chartClasses.Series;
+			import mx.charts.ChartItem;
+			import mx.binding.utils.BindingUtils;
+			import mx.charts.series.LineSeries;
+			import mx.charts.DateTimeAxis;
+			import mx.collections.ArrayCollection;
+			import mx.charts.HitData;
+			import au.com.buzzware.actiontools3.code.XmlUtils;
+			import au.com.buzzware.actiontools3.code.StringUtils;
+
+			protected var xmlGraph: XML;
+
+			[Bindable]
+			public function set dataSource(aGraph: XML):void {
+				trace("TimeLineGraph.set dataSource:"+aGraph.name());
+				Setup(chart,acSource,aGraph,lblTitle);
+			}
+			
+			public function get dataSource():XML {
+				return xmlGraph;
+			}
+
+			[Bindable]
+			private var acSource:ArrayCollection = new ArrayCollection();
+			
+
+			private function InitChart(): void {
+				//trace(dtmSourceStart.toString());
+			}
+
+			//Gets array of coordinate objects for graph dataProvider from xml data node      
+			//<data axis="y" ytype="number" xtype="time" xinterval="86400" origin="2007-01-01T00:00:00+00:00" length="6">
+			//1,2,3,4,5,6
+			//</data>
+			private static function DecodeSeriesDataArray(aDataXML: Object): Array {
+				aDataXML = XmlUtils.AsNode(aDataXML)
+				var interval: int = int(aDataXML.@xinterval) * 1000;
+				var origin: Date = XmlUtils.ParseDate(aDataXML.@origin);
+				var data: String = aDataXML.toString();
+	
+				if (data==null)
+					return null;
+	
+				if (
+					interval == 0 ||
+					aDataXML.@axis != 'y' ||
+					aDataXML.@ytype != 'number' ||
+					aDataXML.@xtype != 'time'
+				) {
+					throw new Error('Not Implemented or bad input')
+				}
+	
+				var arrData:Array = data.split(',')
+				var arrCoords:Array = new Array(arrData.length);
+				var valueX: Date = null;
+				for(var i:int=0; i<arrCoords.length; i++) {
+					valueX = new Date(origin.getTime() + i*interval);
+					arrCoords[i] = {x:valueX, y:arrData[i]}
+					//trace('x:'+arrCoords[i].x.toString()+' y:'+arrCoords[i].y.toString());
+				}
+				return arrCoords;
+			}
+	
+			private function Setup(aChart: LineChart, aArrayCollection: ArrayCollection, aXml: XML, aTitle: Label = null): void {
+				var showChart: Boolean = (aXml!=null && aXml.name()=='graph');
+				
+				aChart.visible = showChart;
+				legend.visible = aChart.visible;
+				aTitle.visible = aChart.visible;
+				
+				if (!showChart) {
+					aArrayCollection.source = null;
+					return;		
+				}
+				var haxis:DateTimeAxis = new DateTimeAxis();
+				//haxis.autoAdjust = false;
+				haxis.baseAtZero = false;
+				haxis.minimum = XmlUtils.ParseDate(aXml.@range_from)
+				haxis.maximum = XmlUtils.ParseDate(aXml.@range_to)
+				haxis.alignLabelsToUnits = true
+				haxis.labelUnits = "days";
+				haxis.interval = 1;
+				//haxis.dataUnits = "days";  
+				//haxis.dataInterval = 1;
+				//haxis.interval = 24*3600*1000;
+			
+				aChart.horizontalAxis = haxis;
+	
+				aChart.series = new Array();
+				if (aTitle)
+					aTitle.text = aXml.title;
+	
+				var seriesData: Array;
+				var allSeriesData: Array = new Array();
+	
+				for each (var xmlSeries:XML in aXml.series) {
+	
+					seriesData = DecodeSeriesDataArray(xmlSeries.data)
+					allSeriesData.push(seriesData)
+	
+					// use http://flexapps.macromedia.com/flex15/chartexplorer/explorer.mxml?versionChecked=true
+	
+					var series:LineSeries = new LineSeries();				
+					series.dataProvider = seriesData;
+					series.displayName = xmlSeries.@name;
+					series.xField="x";
+					series.yField="y";
+					aChart.series.push(series)
+				}
+	
+				aChart.showDataTips = true;
+				aChart.dataTipFunction = function(aHitData: HitData): String {
+					var s: Series = aHitData.element as Series;
+					var series: String = s.displayName;
+					var x: String = StringUtils.ShortDateFormat(aHitData.item.x);
+					var y: String = aHitData.item.y.toString();
+					return series+"<br>"+x+"<br>"+y; 
+				}
+				aArrayCollection.source = allSeriesData;
+				aChart.dataProvider = aArrayCollection;
+			}					
+		]]>
+	</mx:Script>
+	<mx:Label width="100%" height="32" id="lblTitle" textAlign="center" fontFamily="Verdana" fontSize="18" right="10" left="10"/>
+	<mx:LineChart id="chart" x="10" width="100%" height="100%" creationComplete="InitChart()" >
+	</mx:LineChart>
+	<mx:Legend id="legend" x="10" width="100%" height="55" dataProvider="{chart}"/>
+</mx:VBox>

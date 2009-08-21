@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Search for "Supported CSS properties" in Flex docs for official reference
+
+Flex supports the following subset of the CSS style properties as defined by the CSS specification:
+
+color
+fontFamily
+fontSize
+fontStyle
+fontWeight
+paddingBottom
+paddingLeft
+paddingRight
+paddingTop
+textAlign
+textDecoration
+textIndent
+
+
+
+-->
+
+<mx:TextArea 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:atd="au.com.buzzware.actiontools3.design.*"
+	editable="false"
+	condenseWhite="true"
+	horizontalScrollPolicy="auto"
+	verticalScrollPolicy="auto"
+	selectable="true"
+	wordWrap="true"
+	styleSheet="{_stylesheet}"
+	fontSize="20"
+	
+	creationComplete="creationCompleteHandler(event)"
+>
+<mx:Script>
+	<![CDATA[
+		protected var _stylesheet: StyleSheet = new StyleSheet();
+		
+		//http://gasubasu.com/2009/07/06/textfield-–-available-html-tags/
+		protected function creationCompleteHandler(aEvent: Event): void {
+			this.styleSheet = _stylesheet;
+			_stylesheet.parseCSS(defaultCSS);
+			//_stylesheet.setStyle("body", {fontSize:'24',color:'#000000'});
+			//_stylesheet.setStyle("b", {fontWeight:'bold',color:'#FFFF00'});
+/*
+myCSS.setStyle("body", {fontSize:'15',color:'#000066'});
+myCSS.setStyle("h1", {fontSize:'25',color:'#000000'});
+myCSS.setStyle("h2", {fontSize:'19',color:'#000000'});
+myCSS.setStyle("a:link", {color:'#0000CC',textDecoration:'none'});
+myCSS.setStyle("a:hover", {color:'#0000FF',textDecoration:'underline'});
+myCSS.setStyle("b", {fontWeight:'bold'});
+myCSS.setStyle("em", {fontWeight:'bold'});			
+*/			
+			
+		}
+	]]>
+</mx:Script>
+<mx:String id="defaultCSS">
+	<![CDATA[
+
+body {    
+  font-weight: normal;
+  text-decoration: none; 
+  color:#909090;
+}
+
+.emphasis {
+  font-weight: normal; 
+  text-decoration: none; 
+  color:#404080;
+}
+.title {
+  font-size: 18pt; 
+  font-weight: bold; 
+  text-decoration: none; 
+  color:#8080A0;
+}
+a:link {
+  font-weight: none; 
+  text-decoration: underline; 
+  color:#000080;
+}
+a:visited {
+  font-weight: normal; 
+  text-decoration: underline; 
+  color:#800080;
+}
+a:active {
+  font-weight: normal; 
+  text-decoration: underline; 
+  color:#000080;
+}
+a:hover {
+  font-weight: normal; 
+  text-decoration: underline; 
+  color:#000080;
+}
+	]]>
+</mx:String>
+</mx:TextArea>

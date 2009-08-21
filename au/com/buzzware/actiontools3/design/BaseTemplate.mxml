@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<atd:BasePage
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:atd="au.com.buzzware.actiontools3.design.*" 
+	initialize="fillContainers()"
+	pageIn="callLater(funnelEventToContainersChildren,[event])" 
+	pageOut="callLater(funnelEventToContainersChildren,[event])" 
+	pageReset="callLater(funnelEventToContainersChildren,[event])" 
+>
+
+<!--
+	This custom component is intended to be a base class for an application 
+	template. 'Template' here means a page with common elements such as a 
+	header graphic and footer links. The template can be instantiated in 
+	multiple places within an application with content given as child nodes.
+
+	Content can be given in two forms. See the Test App below.
+
+	From the docs : 
+	"The one place where Flex prohibits the use of a default property is when you 
+	use the ActionScript class as the root tag of an MXML component. In this situation, 
+	you must use child tags to define the property".
+	
+	The BaseTemplate can't simply be inherited from to create derived 
+	components with additional visual children like a normal container.  The 
+	error "Multiple sets of visual children have been specified for this 
+	component (base component definition and derived component definition)" is 
+	generated when this is attempted.  The implementation documented here, 
+	with the template instantiated directly and additional components given as 
+	child tags avoids this problem.  
+
+Sample Template (AppTemplate.mxml):
+
+	+ This defines a basic page structure, with 2 empty SimplePanels ready to be filled when used.
+	
+	<?xml version="1.0" encoding="utf-8"?>
+	<atd:BaseTemplate xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*" xmlns:atd="au.com.buzzware.actiontools3.design.*" layout="vertical">
+		<mx:Button label="Button Before"/>
+		<atd:SimplePanel id="pnlChildContainer" backgroundColor="white" width="100%" height="75" />
+		<mx:Button label="Button Between"/>
+		<atd:SimplePanel id="pnlOtherContainer" backgroundColor="white" width="100%" height="75" />
+		<mx:Button label="Button After"/>
+	</atd:BaseTemplate>
+
+Sample Page (ChartPage.mxml):
+
+	+ This is here to show how to use a container component to implement an application page, but there is 
+	nothing special about it - it is based on VBox and instantiated in TestApp.mxml like any other component.
+	
+	<?xml version="1.0" encoding="utf-8"?>
+	<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="*" xmlns:atd="au.com.buzzware.actiontools3.design.*" layout="vertical">
+		<mx:Button label="Page Button"/>
+		<mx:Label text="Page Label"/>
+	</mx:VBox>
+
+Sample App (TestApp.mxml):
+
+	+ This instantiates AppTemplate multiple times, each with different content (including the ChartPage page), 
+	and each demonstrating the forms for giving content for the template containers.
+	
+	<?xml version="1.0" encoding="utf-8"?>
+	<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="*" xmlns:atd="au.com.buzzware.actiontools3.design.*" layout="absolute" height="676">
+	<mx:VBox>
+	
+		<!- 	first form for single target container. contentContainerId specifies container. ->
+		<AppTemplate contentContainerId="pnlChildContainer">
+			<ChartPage/>
+		</AppTemplate>
+	
+		<!- 	second form for multiple target containers. ContainerContent holds content for each container and containerId specifies id ->
+		<AppTemplate>
+			<atd:ContainerContent containerId="pnlChildContainer">
+				<ChartPage/>
+			</atd:ContainerContent>
+			<atd:ContainerContent containerId="pnlOtherContainer">
+				<mx:Label text="Second Panel"/>
+			</atd:ContainerContent>			
+		</AppTemplate>	
+	
+	</mx:VBox>
+	</mx:Application> 
+-->
+
+	<mx:Metadata>
+		[DefaultProperty("contents")]		
+	</mx:Metadata>
+
+	<mx:Script><![CDATA[
+		import au.com.buzzware.actiontools3.code.PageEvent;
+		import flash.trace.Trace;
+	
+		import mx.core.Container;
+		import mx.core.UIComponent;
+		import flash.events.Event
+		import au.com.buzzware.actiontools3.code.MiscUtils;
+		
+		public var contentContainerId: String;
+		public var contents: Array;
+		
+		protected var _containers: Array = new Array()
+		public function get containers(): Array {
+			return _containers
+		}
+				
+		protected function funnelEventToContainersChildren(aEvent: Event): void {
+			//MiscUtils.TraceEvent(aEvent,'BEGIN fecc: ')
+			if (aEvent is PageEvent)
+				//trace('fecc: aEvent.properties='+MiscUtils.DynamicPropertiesToString(PageEvent(aEvent).options,false));
+			for each (var cont:Container in _containers) {
+				//trace('fecc: cont:'+cont.name)
+				for each (var ch:UIComponent in cont.getChildren()) {
+					//trace('fecc: dispatch to ch:'+ch.name)
+					var e:Event = aEvent.clone()
+					//if (aEvent is PageEvent)
+					//	trace('fecc: clone.properties='+MiscUtils.DynamicPropertiesToString(PageEvent(e).options,false));
+					ch.dispatchEvent(e)
+				}
+			}
+			//trace('END fecc')
+		}
+
+		public function fillContainers(): void {
+			var singleContainer:Container = this.contentContainerId ? (this[this.contentContainerId] as Container) : null;
+			var multiContainer:Array = this.contents;
+			// if multiContainer and contains any non-ContainerContent components, set multiContainer to null
+			if (multiContainer) {
+				for (var i:int=0; i < multiContainer.length; i++) {
+					if (!(multiContainer[i] is ContainerContent)) {
+						multiContainer = null;
+						break;
+					}
+				}
+			}
+			if ((!singleContainer && !multiContainer) || (singleContainer && multiContainer))
+				throw new Error('BaseTemplate: Must supply contentContainerId attribute or ContainerContent tags, but not both');
+			if (singleContainer) {
+				_containers.push(singleContainer)
+				if (this.contents) {
+					for (var iComp:int=0; iComp < this.contents.length; iComp++)
+						singleContainer.addChild(this.contents[iComp]);
+				}
+			} else {
+				for (var iContainer:int=0; iContainer < this.contents.length; iContainer++) {
+					var src: ContainerContent = null;
+					if (!(src = this.contents[iContainer] as ContainerContent))
+						continue;
+					// got a TemplateContainer
+					var target: Container = this[src.containerId]
+					if (target) {
+						_containers.push(target)
+						for (var iChild:int=0; iChild < src.numChildren; iChild++)
+							target.addChild(src.getChildAt(iChild));
+					}
+				}
+			}
+			this.validateDisplayList();
+		}
+				
+	]]></mx:Script>		
+</atd:BasePage>
+

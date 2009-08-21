@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<atd:SimplePopup
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:atd="au.com.buzzware.actiontools3.design.*"
+	backgroundColor="{frameColor}"
+ 	width="650"
+ 	height="500"
+ 	modalTransparency="0.2"
+ 	modalTransparencyBlur="2"
+ 	layout="absolute"
+ 	showCloseButton="true"
+ 	dropShadowEnabled="true"
+ 	paddingLeft="20"
+ 	paddingTop="20"
+ 	paddingRight="20"
+ 	paddingBottom="20"
+>
+<mx:Script>
+	<![CDATA[
+		import mx.states.SetStyle;
+		import mx.managers.PopUpManager;
+		import mx.core.UIComponent;
+	public var htmlText: String;
+	public var frameColor: Number = 0xFFFFFF;
+	public var backgroundColor: Number = 0xFFFFFF;
+	
+	public static function show(aParent: DisplayObject,aHtml: String,aFrameColor: Number = 0xC0C0C0,aBackgroundColor: Number = 0xFFFFFF): HTMLPopup {
+		var p: HTMLPopup = new HTMLPopup();
+		p.x = (aParent.width-p.width) / 2;
+		p.y = 70; //-p.height;
+		//p.alpha = 0;
+		p.htmlText = aHtml;
+		PopUpManager.addPopUp(p,aParent,true);
+		p.setStyle('backgroundColor',aFrameColor);
+		p.textArea.setStyle('backgroundColor',aBackgroundColor);
+		return p;
+	}
+		
+	]]>
+</mx:Script>
+<atd:HTMLTextArea 
+	id="textArea"  
+	left="20" right="20" top="10" bottom="70"
+	htmlText="{htmlText}" 
+	cornerRadius="5" 
+	backgroundColor="{backgroundColor}" 
+	paddingLeft="20" paddingTop="20" paddingRight="20" paddingBottom="20"
+/>
+<mx:Button id="button" width="120" height="40" label="OK" bottom="10" horizontalCenter="0" click="close(0)" fontSize="20"/>
+</atd:SimplePopup>

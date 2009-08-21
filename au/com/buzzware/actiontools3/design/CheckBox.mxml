@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This was lifted from http://shigeru-nakagaki.com/index.cfm/2007/8/24/20070824-CheckBox-in-DataGrid -->
+<mx:CheckBox xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+			<![CDATA[
+					import mx.controls.DataGrid;
+					import mx.events.DataGridEvent;
+					import mx.utils.ObjectUtil;
+					import mx.utils.UIDUtil;
+					import mx.events.FlexEvent;
+					import mx.collections.ICollectionView;
+					import mx.controls.dataGridClasses.DataGridListData;
+					private var _ownerData:Object;
+					private var _text:String;
+					override public function set data(value:Object):void
+					{
+							_ownerData = value;
+							if(_ownerData){
+									var col:DataGridListData = DataGridListData(listData);
+									selected = (_ownerData[col.dataField] == "true") ? true : false;
+									updateDummyText();
+									dispatchEvent(new FlexEvent(FlexEvent.DATA_CHANGE));
+							}
+					}
+					override public function get data():Object
+					{
+							return _ownerData;
+					}
+					public function set text(value:String):void
+					{
+							//
+					}
+					public function get text():String
+					{
+							return _text;
+					}
+					override protected function clickHandler(event:MouseEvent):void
+					{
+							super.clickHandler(event);
+							var col:DataGridListData = DataGridListData(listData);
+							_ownerData[col.dataField] = selected ? "true" : "false";
+							// If rendererIsEditor is true,
+							// change event of collection doesn't happen by this event
+							var toggleEvent:Event = new Event("describeChange");
+							owner.dispatchEvent(toggleEvent);
+							updateDummyText();
+					}
+					private function updateDummyText():void
+					{
+							if(selected){
+									_text = "true";
+							}else{
+									_text = "false";
+							}
+					}
+			]]>
+	</mx:Script>
+</mx:CheckBox>

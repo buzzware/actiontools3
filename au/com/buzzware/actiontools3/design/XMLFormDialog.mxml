@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	showCloseButton="true" 
+	close="onClose(event)"
+>
+   <mx:Script>
+       <![CDATA[
+          import mx.managers.PopUpManager;
+          import mx.events.CloseEvent;
+          import mx.controls.Alert;
+
+					import au.com.buzzware.actiontools3.design.XMLForm;
+					
+					public static const OK:int = Alert.OK;
+					public static const CANCEL:int= Alert.CANCEL;
+					public static const ESCAPE:int= -1;
+
+					public var GuestForm: XMLForm = null;
+
+					public static function createPopUp(aParent: DisplayObject,aComponent: XMLForm,aData: XML = null): XMLFormDialog {
+						var result: XMLFormDialog = (PopUpManager.createPopUp(aParent, XMLFormDialog, true) as XMLFormDialog);
+						result.GuestForm = aComponent
+						if (aData && aComponent)
+							aComponent.DataRoot = aData;
+						result.boxMain.addChild(aComponent)
+						PopUpManager.centerPopUp(result)
+						return result
+					}
+
+					// close button in title bar calls this with detail to -1
+          private function onClose(aEvent: CloseEvent): void {
+            PopUpManager.removePopUp(this);
+          }
+
+       ]]>
+   	</mx:Script>
+   	<mx:VBox id="boxMain">
+   	</mx:VBox>
+	<mx:Button id="btnOK" click="dispatchEvent(new CloseEvent(CloseEvent.CLOSE,false,true,(OK)))" label="OK" />
+</mx:TitleWindow>
+
