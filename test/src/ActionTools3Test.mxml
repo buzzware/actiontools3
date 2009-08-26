@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="640" height="480" creationComplete="creationCompleteHandler(this)">
+<mx:Script>
+	<![CDATA[
+		import org.flexunit.internals.TraceListener;
+		//import org.flexunit.internals.TextListener;
+		//import mx.logging.LogEventLevel;
+		import org.flexunit.runner.FlexUnitCore;
+		import au.com.buzzware.actiontools3.code.MiscUtils;
+		import mx.core.Application;
+
+		import ActionTools3Tests;
+        
+		private var core:FlexUnitCore;  
+        
+		public function creationCompleteHandler(aExecutive: Object): void {
+			core = new FlexUnitCore();
+			//core.addListener( new XMLListener( "FlexUnit4Test" ) );
+			//Listener for outputting to the trace console via the Flex logging class, Flex Only
+			//core.addListener( TextListener.getDefaultTextListener( LogEventLevel.DEBUG ) );
+			core.addListener( new TraceListener() );
+			core.addEventListener(
+				FlexUnitCore.TESTS_COMPLETE,
+				function(): void {
+					Application.application.exit();
+				}
+			);
+			core.run( ActionTools3Tests );
+		}		
+	]]>
+</mx:Script>
+</mx:WindowedApplication>
