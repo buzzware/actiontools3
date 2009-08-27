@@ -1,6 +1,13 @@
 package {
 	
+	import au.com.buzzware.actiontools3.code.MiscUtils;
 	import au.com.buzzware.actiontools3.code.XmlUtils;
+	
+	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
+	import flash.utils.getQualifiedSuperclassName;
+	
+	import mx.controls.Button;
 	
 	import org.flexunit.assertThat;
 	import org.hamcrest.core.isA;
@@ -78,8 +85,16 @@ package {
 			assertThat( root, IsNullMatcher )
 			root = XmlUtils.GetRoot(XML('<xhtml><head></head></xhtml>'));
 			assertThat( root, IsNullMatcher )
-		} 
- 
- 		
+		}
+
+		[Test]
+		public function testGetSuperclasses(): void {
+			var ancestors: Array = MiscUtils.getSuperclasses(A)
+			assertThat( ancestors, equalTo([A, B, Object]) )
+			var sAncestors: String = MiscUtils.superclassesAsString(A);
+			assertThat( sAncestors, equalTo('A > B > Object') );
+			assertThat( MiscUtils.superclassesAsString(Button), equalTo('mx.controls::Button > mx.core::UIComponent > mx.core::FlexSprite > flash.display::Sprite > flash.display::DisplayObjectContainer > flash.display::InteractiveObject > flash.display::DisplayObject > flash.events::EventDispatcher > Object') );
+			assertThat( MiscUtils.superclassesAsString(Button,true), equalTo('Button > UIComponent > FlexSprite > Sprite > DisplayObjectContainer > InteractiveObject > DisplayObject > EventDispatcher > Object') );		
+		}		
 	}
 }

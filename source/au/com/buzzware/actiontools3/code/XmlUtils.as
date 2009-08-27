@@ -10,12 +10,12 @@
 package au.com.buzzware.actiontools3.code {
 
 	//import mx.xpath.XPathAPI;	
+	import flash.xml.XMLDocument;
+	
 	import memorphic.xpath.XPathQuery;
 	
 	import mx.utils.ObjectProxy;
-	
-	import tpl.HtmlParser;
-	
+		
 	public class XmlUtils {
 
 		public static function AsNode(aObject: Object): XML {
@@ -39,6 +39,12 @@ package au.com.buzzware.actiontools3.code {
 		// returns given XML node if it is really XML, or null
 		public static function IsReallyXML(aXML: XML): XML {
 			return (aXML!=null && !IsHTML(aXML)) ? aXML : null;
+		}
+
+		// given a string or XML node, returns the root element.
+		// HTML-like documents will return null		
+		public static function GetRoot(aDocOrString: Object): XML {
+			return AsXmlNode(aDocOrString);
 		}
 
 		// determines whether given root node is the root XML object of a HTML document loaded into XML objects. returns given node or null
@@ -340,13 +346,6 @@ package au.com.buzzware.actiontools3.code {
 				/( [a-z]+)=([^'"][^ >]*)/g , // '/
 				"$1=\"$2\""
 			)
-		}
-		
-		public static function HtmlToXmlNode(aHtml: String): XML {
-			var html: String = StringUtils.firstMatch(aHtml,/<HTML.*<\/HTML>/ms);
-			var parser: HtmlParser = new HtmlParser();
-			var xmlBody: String = parser.HTMLtoXML(html);
-			return XML('<?xml version="1.0" encoding="utf-8"?>'+xmlBody);
-		}
+		}		
 	}
 }

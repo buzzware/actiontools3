@@ -34,14 +34,14 @@ package au.com.buzzware.actiontools3.code {
 		// Written by Robert Penner in May 2001 - www.robertpenner.com
 		// Optimized by Ben Glazer - ben@blinkonce.com - on June 8, 2001
 		// Optimized by Robert Penner on June 15, 2001
-		public static function formatDecimals(num, digits) {
+		public static function formatDecimals(num, digits): String {
 			// If no decimal places needed, just use built-in Math.round
 			if (digits <= 0)
 				return String(Math.round(num));
 		
 			//temporarily make number positive, for efficiency
 			if (num < 0) {
-				var isNegative = true;
+				var isNegative: Boolean = true;
 				num *= -1;
 			}
 		
@@ -119,7 +119,7 @@ package au.com.buzzware.actiontools3.code {
 			var mm: int = toInt(aString.substr(4,2),0);
 			var dd: int = toInt(aString.substr(6,2),0);
 			if (yyyy && mm && dd)
-				return new Date(yyyy,mm,dd)
+				return new Date(yyyy,mm-1,dd)
 			else
 				return aDefault;
 		}

@@ -10,17 +10,11 @@
 package au.com.buzzware.actiontools3.code {
 
 	import flash.display.DisplayObject;
-	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
+	import flash.events.IEventDispatcher;
 	import flash.utils.*;
 	
-	import mx.core.Application;
-	import mx.core.Container;
-	import mx.core.UIComponent;
-	import mx.rpc.events.ResultEvent;
 	import mx.events.ResizeEvent;
-
-	import au.com.buzzware.actiontools3.code.MiscUtils;
 
 	public class EventUtils {
 		public static function EventToString(aEvent: Event): String {
@@ -40,6 +34,19 @@ package au.com.buzzware.actiontools3.code {
 
 		public static function TraceEvent(aEvent: Event): void {
 			trace(EventToString(aEvent));
+		}
+		
+		public static function AddMultiListener(
+			aTarget: IEventDispatcher,
+			aEvents: Array,
+			aHandler: Function, 
+			use_capture:Boolean = false, 
+			priority:int = 0, 
+			weakRef:Boolean = false
+		): void {
+			for each (var e:* in aEvents) {
+				aTarget.addEventListener(e,aHandler,use_capture,priority,weakRef);
+			}
 		}
 	}
 }

@@ -12,13 +12,14 @@ package au.com.buzzware.actiontools3.code {
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
+	import flash.events.IEventDispatcher;
 	import flash.utils.*;
 	
 	import mx.core.Application;
 	import mx.core.Container;
 	import mx.core.UIComponent;
-	import mx.rpc.events.ResultEvent;
-
+	import mx.core.mx_internal;
+	import mx.rpc.events.ResultEvent; use namespace mx_internal;	// should be last import
 
 	public class MiscUtils {
 		public static function DumpPars(): void {
@@ -127,6 +128,50 @@ package au.com.buzzware.actiontools3.code {
 		public static function ClassName(aObject: Object): String {
 			return shortName(flash.utils.getQualifiedClassName(aObject));
 		}
+
+		//getQualifiedSuperclassName(aObjectOrClass): String			
+		//getQualifiedClassName(aObject): String
+		//getDefinitionByName(aClassName:String): Class
+
+		
+		public static function getSuperclass(aClass: Class): Class {
+			var nameSuper: String = getQualifiedSuperclassName(aClass);
+			var classSuper: Class = getDefinitionByName(nameSuper) as Class;
+			return classSuper;
+		}
+
+		public static function getClass(aObject: Object): Class {
+			var name: String = getQualifiedClassName(aObject);
+			var c: Class = getDefinitionByName(name) as Class;
+			return c;
+		}
+
+		public static function getSuperclasses(aClass: Class): Array {
+			var currClass: Class = aClass;
+			var currName: String;
+			var result: Array = [];
+			
+			result.push(currClass);
+			while (currClass!=Object) {
+				currClass = getSuperclass(currClass);
+				result.push(currClass);
+			}
+			return result;			
+		}
+
+		public static function superclassesAsString(aClass: Class, aShort: Boolean = false): String {
+			var sc: Array = getSuperclasses(aClass);
+			if (sc.length==0)
+				return null;
+			sc = sc.map(
+   			function(c:*, i:int, a:Array):String {
+        	return aShort ? MiscUtils.shortName(getQualifiedClassName(c)) : getQualifiedClassName(c);
+        }
+      );			
+			return sc.join(' > ');
+		}
+
+
 		
 /* 		public static function ClassOfObject(aObject: Object): Class {
 			
@@ -170,6 +215,16 @@ package au.com.buzzware.actiontools3.code {
 			result += EventToString(aEvent)			
 			trace(result)
 		}
+		
+		// call attachEventTracer(someComponent) to have all events dispatched by that component traced
+		public static function attachEventTracer(aTarget: IEventDispatcher): void {
+			UIComponent.mx_internal::dispatchEventHook = function(aEvent:Event, aComponent:UIComponent): void {
+				if (aComponent != aTarget)
+					return;
+				TraceEvent(aEvent);
+			}
+		}
+		
 
 		public static function ObjectToString(aObject: Object): String {
 			return dump(aObject);
@@ -302,7 +357,13 @@ package au.com.buzzware.actiontools3.code {
 			var className:String = flash.utils.getQualifiedClassName(o);
 			// starting from here we create the dump string
 			_dumpString += _dumpIndent + className;
-			if (type == "object") {
+			if (className=='Date') {
+				_dumpString += " = " + StringUtils.UniDateFormat(o as Date,'null') + "\n";	
+			} else if (type == "string") {
+				_dumpString += " (" + o.length + ") = \"" + o + "\"\n";
+			} else if (type == "number") {
+				_dumpString += " = " + o.toString() + "\n";
+			} else if (type == "object") {
 				_dumpString += " (" + getLength(o) + ")";
 				_dumpString += " {\n";
 				_dumpIndent += "    ";
@@ -315,11 +376,8 @@ package au.com.buzzware.actiontools3.code {
 				}
 				_dumpIndent = _dumpIndent.substring(0,_dumpIndent.length-4);
 				_dumpString += _dumpIndent + "}\n";
-			} else {
-				if (type == "string")
-					_dumpString += " (" + o.length + ") = \"" + o + "\"\n";
-				else
-					_dumpString += "(" + o + ")\n";
+			} else if (type == "date") {
+				_dumpString += "(" + o + ")\n";
 			}
 			// returning the dump string
 			return _dumpString;			
@@ -383,5 +441,6 @@ package au.com.buzzware.actiontools3.code {
 			}
 			return null;
 		}
+		
 	}
 }

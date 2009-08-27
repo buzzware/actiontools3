@@ -7,6 +7,10 @@
  *
  *--------------------------------------------------------------------------*/
 
+// see http://bugs.adobe.com/jira/browse/SDK-22053
+// perhaps not necessary anymore ? Bug seems fixed. 
+// Not sure why but DateFormatter is functioning correctly now
+
 package au.com.buzzware.actiontools3.code
 {
 	import mx.formatters.DateFormatter;
@@ -18,7 +22,8 @@ import mx.formatters.StringFormatter;
 	
 	public class DateFormatterPatched extends DateFormatter
 	{
-		
+	}
+/*		
 		private static const VALID_PATTERN_CHARS:String = "Y,M,D,A,E,H,J,K,L,N,S";
 		
 		public function DateFormatterPatched()
@@ -134,4 +139,5 @@ import mx.formatters.StringFormatter;
         return dataFormatter.formatValue(value);
     }
 	}
+	*/
 }
