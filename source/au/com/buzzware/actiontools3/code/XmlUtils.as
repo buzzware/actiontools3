@@ -68,6 +68,22 @@ package au.com.buzzware.actiontools3.code {
 			else
 				return parent.children()[i]; 
 		}
+		
+		public static function nextNested(aCurrTag: XML, aFilter: Function = null): XML {
+			if (!aCurrTag)
+				return null;
+			var curr: XML = aCurrTag
+			do {
+				if ((!aFilter || aFilter(curr)) && (curr.children().length() > 0)) {
+					curr = XmlUtils.AsNode(curr.children()[0])
+				} else {
+					var sibling: XML = XmlUtils.nextSibling(curr)
+					curr = (sibling ? sibling : XmlUtils.nextSibling(curr.parent()))				
+				}
+			} while (curr && aFilter && !aFilter(curr));
+			return curr;
+		}
+
 
 		// determines whether given root node is the root XML object of a HTML document loaded into XML objects. returns given node or null
 		public static function IsHTML(aRoot: XML): XML {
