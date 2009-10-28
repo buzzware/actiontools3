@@ -206,6 +206,16 @@ package au.com.buzzware.actiontools3.code {
 		
 		*/
 		
+		public static function endsWith(aString: String, aSuffix: String): Boolean {
+			var i: int = aString.lastIndexOf(aSuffix);
+			return (i==aString.length-aSuffix.length);
+		}
+		
+		public static function beginsWith(aString: String, aPrefix: String): Boolean {
+			var i: int = aString.indexOf(aPrefix);
+			return (i==0);			
+		}
+		
 		public static function chop(aString: String, aSuffix: String): String {
 			var i: int = aString.lastIndexOf(aSuffix);
 			return (i==aString.length-aSuffix.length) ? aString.substring(0,i) : aString;
@@ -219,6 +229,12 @@ package au.com.buzzware.actiontools3.code {
 		public static function firstMatch(aString: String, aPattern: RegExp): String {
 			var html: Array = aString.match(aPattern);//  /<HTML.*<\/HTML>/ms);
 			return html.length==0 ? null : html[0];
+		}
+		
+		public static function split3(aString,aPattern,aOccurence=0) {
+			//matches = aString.scan_md(aPattern)
+			//match = matches[aOccurence]
+			//return [match.pre_match,match.to_s,match.post_match]
 		}
 		
 		public static function splitCsvWithWhitespace(aString: String): Array {

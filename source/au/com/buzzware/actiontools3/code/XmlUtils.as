@@ -10,8 +10,6 @@
 package au.com.buzzware.actiontools3.code {
 
 	//import mx.xpath.XPathAPI;	
-	import flash.xml.XMLDocument;
-	
 	import memorphic.xpath.XPathQuery;
 	
 	import mx.utils.ObjectProxy;
@@ -41,10 +39,34 @@ package au.com.buzzware.actiontools3.code {
 			return (aXML!=null && !IsHTML(aXML)) ? aXML : null;
 		}
 
+		public static function Attr(aXML: XML,aAttr: String): String {
+			if (!aXML)
+				return null;
+			var result: String = aXML.attribute(aAttr)
+			return result && result!='' ? result : null
+		}
+
 		// given a string or XML node, returns the root element.
 		// HTML-like documents will return null		
-		public static function GetRoot(aDocOrString: Object): XML {
-			return AsXmlNode(aDocOrString);
+		public static function GetRoot(aDocOrString: Object,aExpectedTag: String = null): XML {
+			var root: XML = AsXmlNode(aDocOrString);
+			if (root==null)
+				return null;
+			if (!(root is XML) || ((aExpectedTag!=null) && (root.name() != aExpectedTag))) {
+				throw new Error("XML document corrupt or root tag not what was expected");
+			}
+			return root;
+		}
+		
+		public static function nextSibling(aNode: XML): XML {
+			var parent: XML = aNode.parent();
+			if (!parent)
+				return null;
+			var i:int = aNode.childIndex()+1;
+			if ( (i==0) || (i>=parent.children().length()) )
+				return null
+			else
+				return parent.children()[i]; 
 		}
 
 		// determines whether given root node is the root XML object of a HTML document loaded into XML objects. returns given node or null
@@ -57,6 +79,24 @@ package au.com.buzzware.actiontools3.code {
 				return aRoot;
 			return null;
 		}
+		
+		public static function addFromString(aParent: XML, aXml: String): XML {
+			var result: XML = null;
+			if (StringUtils.beginsWith(aXml,'<?xml ')) {
+				// whole doc, single root 
+				result = aParent.appendChild(XML(aXml));
+			} else {	// fragment, potentially multiple roots
+				aXml = '<?xml version="1.0" encoding="utf-8" standalone="yes" ?><root>'+aXml+'</root>';
+				var xmlNew: XML = XML(aXml)
+				for each (var c:XML in xmlNew.*) {
+					aParent.appendChild(c);
+					if (!result)
+						result = AsNode(c);
+				}
+			}
+			return result;
+		}
+		
 		// Gets a node selected by aXPath or null. So long as aXPath is valid,
 		// exceptions will not be thrown. If the node (or any part of the given path to it)
 		// doesn't exit, null is returned. 

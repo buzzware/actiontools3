@@ -34,7 +34,18 @@ package au.com.buzzware.actiontools3.code {
 		}
 		
 		public static function equals(aDate1: Date, aDate2: Date): Boolean {
+			if (aDate1==null && aDate2==null)
+				return true;
+			if (aDate1==null || aDate2==null)
+				return false;
 			return (aDate1.getTime() == aDate2.getTime());
 		}
+		
+		// year must be 4 digit, month must be 0-11
+		public static function daysInMonth(aYear: int, aMonth: int): int {
+			var d:Date = new Date(aYear, (aMonth+1)%12, 0);
+			return d.date;
+		}
+
 	}
 }

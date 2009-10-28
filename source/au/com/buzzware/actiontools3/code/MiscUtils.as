@@ -442,5 +442,12 @@ package au.com.buzzware.actiontools3.code {
 			return null;
 		}
 		
+		public static function randomInt(aRange: int): int {
+			return Math.floor(Math.random()*aRange)
+		}
+		
+		public static function randomIntRange(aFrom,aTo: int): int {
+			return aFrom+randomInt(aTo-aFrom+1)
+		}		
 	}
 }

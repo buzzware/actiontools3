@@ -41,24 +41,35 @@
 package au.com.buzzware.actiontools3.code {
 
 	import flash.events.EventDispatcher;
-	import au.com.buzzware.actiontools3.code.StringUtils;
-	import au.com.buzzware.actiontools3.code.XmlUtils;
 	
 	public dynamic class BaseConfig extends EventDispatcher {
 
 		protected var _valueCache: Object = new Object()
 		protected var _source: XML;
-		protected var _simpleItems: XML
-
+		protected var _simpleItems: XML;
+		protected var _capitalized: Boolean = false;
+		
 		public function BaseConfig(aSource: XML) {
 			super()
 			_source = aSource
 			var name: String
 			var val: String
-			_simpleItems = (aSource && XmlUtils.AsNode(aSource.SimpleItems))
+			if (aSource) {
+				if (_simpleItems = XmlUtils.AsNode(aSource.simpleItems)) {
+					_capitalized = false;
+					
+				} else if (_simpleItems = XmlUtils.AsNode(aSource.SimpleItems)) {
+					_capitalized = true;
+				}
+			}			
 			if (_simpleItems) {
-				for each(var i: XML in _simpleItems.Item) {
-					name = i.@Name
+				var items: XMLList;
+				if (_capitalized)
+					items = _simpleItems.Item;
+				else 
+					items = _simpleItems.item;
+				for each(var i: XML in items) {
+					name = (_capitalized ? i.@Name : i.@name);
 					val = i.text()
 					if (this.hasOwnProperty(name)) {
 						_valueCache[name] = val
@@ -70,6 +81,10 @@ package au.com.buzzware.actiontools3.code {
 					*/
 				}
 			}
+		}
+		
+		public function get capitalized(): Boolean {
+			return _capitalized;
 		}
 
 		public function stringItem(aName: String,aDefault: String = null,aEmptyAsDefault: Boolean = true): String {

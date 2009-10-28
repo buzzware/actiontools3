@@ -30,6 +30,12 @@ package au.com.buzzware.actiontools3.code {
 
 
 		// This was developed for detecting loaded SWFs having finished playing
+	  /*
+	  Attaches handler of the form 
+	  function(aMainTimeline: MovieClip): void {
+	  
+	  }
+	  */
 	  public static function attachHandlerForFinishedPlaying(
 	  	aMainTimeline: MovieClip,
 	  	aHandler: Function,

@@ -3,10 +3,6 @@ package {
 	import au.com.buzzware.actiontools3.code.MiscUtils;
 	import au.com.buzzware.actiontools3.code.XmlUtils;
 	
-	import flash.utils.getDefinitionByName;
-	import flash.utils.getQualifiedClassName;
-	import flash.utils.getQualifiedSuperclassName;
-	
 	import mx.controls.Button;
 	
 	import org.flexunit.assertThat;
@@ -85,6 +81,8 @@ package {
 			assertThat( root, IsNullMatcher )
 			root = XmlUtils.GetRoot(XML('<xhtml><head></head></xhtml>'));
 			assertThat( root, IsNullMatcher )
+			root = XmlUtils.GetRoot(XML('<HTML><head></head></HTML>'));
+			assertThat( root, IsNullMatcher )
 		}
 
 		[Test]
@@ -95,6 +93,43 @@ package {
 			assertThat( sAncestors, equalTo('A > B > Object') );
 			assertThat( MiscUtils.superclassesAsString(Button), equalTo('mx.controls::Button > mx.core::UIComponent > mx.core::FlexSprite > flash.display::Sprite > flash.display::DisplayObjectContainer > flash.display::InteractiveObject > flash.display::DisplayObject > flash.events::EventDispatcher > Object') );
 			assertThat( MiscUtils.superclassesAsString(Button,true), equalTo('Button > UIComponent > FlexSprite > Sprite > DisplayObjectContainer > InteractiveObject > DisplayObject > EventDispatcher > Object') );		
-		}		
+		}
+		
+		[Test]
+		public function testXmlUtilsAddFromString(): void {
+			var str: String = '<?xml version="1.0" encoding="utf-8"?><top><sub></sub><sub></sub></top>';
+			var xml: XML = XmlUtils.GetRoot(str);
+			assertThat( xml.children().length() == 2 )
+			var xnod: XML = XmlUtils.addFromString(xml,'');	
+			assertThat( xnod == null )
+			assertThat( xml.children().length() == 2 )
+			
+			xml = XmlUtils.GetRoot(str);
+			assertThat( xml.sub.length() == 2 )
+			xnod = XmlUtils.addFromString(xml,'<fruit taste="yummy">apple</fruit>');
+			assertThat( xnod.name() == 'fruit' )
+			assertThat( xnod.@taste == 'yummy' )
+			assertThat( xml.sub.length() == 2 )
+			assertThat( xml.fruit.@taste == 'yummy' )
+			assertThat( xml.fruit == 'apple' )
+			xnod = XmlUtils.addFromString(xml,'<fruit taste="sour">lemon</fruit><fruit taste="sweet">orange</fruit>');
+			assertThat( xnod.name() == 'fruit' )
+			assertThat( xnod.@taste == 'sour' )
+			assertThat( xml.fruit.length() == 3 )
+		}
+
+		[Test]
+		public function testXmlUtilsNextSibling(): void {
+			var str: String = '<?xml version="1.0" encoding="utf-8"?><top><one></one><two></two><three></three></top>';
+			var xml: XML = XmlUtils.GetRoot(str);
+			var one: XML = xml.one;
+			var two: XML = xml.two;
+			var three: XML = xml.three;
+			assertThat( XmlUtils.nextSibling(one) == two )
+			assertThat( XmlUtils.nextSibling(two) == three )
+			assertThat( XmlUtils.nextSibling(three) == null )
+			
+		}
+				
 	}
 }
