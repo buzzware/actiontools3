@@ -34,7 +34,7 @@ package au.com.buzzware.actiontools3.code {
 		// Written by Robert Penner in May 2001 - www.robertpenner.com
 		// Optimized by Ben Glazer - ben@blinkonce.com - on June 8, 2001
 		// Optimized by Robert Penner on June 15, 2001
-		public static function formatDecimals(num, digits): String {
+		public static function formatDecimals(num: Number, digits: int): String {
 			// If no decimal places needed, just use built-in Math.round
 			if (digits <= 0)
 				return String(Math.round(num));
@@ -208,7 +208,7 @@ package au.com.buzzware.actiontools3.code {
 		
 		public static function endsWith(aString: String, aSuffix: String): Boolean {
 			var i: int = aString.lastIndexOf(aSuffix);
-			return (i==aString.length-aSuffix.length);
+			return (i>=0 && i==aString.length-aSuffix.length);
 		}
 		
 		public static function beginsWith(aString: String, aPrefix: String): Boolean {
@@ -231,10 +231,12 @@ package au.com.buzzware.actiontools3.code {
 			return html.length==0 ? null : html[0];
 		}
 		
-		public static function split3(aString,aPattern,aOccurence=0) {
-			//matches = aString.scan_md(aPattern)
-			//match = matches[aOccurence]
-			//return [match.pre_match,match.to_s,match.post_match]
+		public static function split3(aString: String,aPattern: Object) {
+			var search: int = aString.search(aPattern)
+			if (search==-1)
+				return ['',null,aString];
+			var match: String = aString.match(aPattern)[0]
+			return [aString.substring(0,search),match,aString.substring(search+match.length)]
 		}
 		
 		public static function splitCsvWithWhitespace(aString: String): Array {

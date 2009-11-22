@@ -1,9 +1,10 @@
 package au.com.buzzware.actiontools3.code {
+	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
-	
-	import mx.core.UIComponent;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 	
 	public class FlashUtils {
 	
@@ -40,28 +41,77 @@ package au.com.buzzware.actiontools3.code {
 	  	aMainTimeline: MovieClip,
 	  	aHandler: Function,
 	  	aWaitForLastFrame: Boolean = true
-	  ): void {
+	  ): Function {
 	  	MiscUtils.TraceObject(aMainTimeline);
 			//if (!aHandler)
 			//	return;  	
 	  	var lastFrame: int = -1;
 	  	var lastEventFrame: int = -1;
 	  	trace('addEventListener');
-	  	aMainTimeline.addEventListener(
-	  		Event.ENTER_FRAME,
-	  		function(aEvent: Event): void {
-	 				if ((!aWaitForLastFrame || (aMainTimeline.currentFrame==aMainTimeline.totalFrames)) && (lastFrame != -1) && (aMainTimeline.currentFrame==lastFrame)) {
-	 					if (lastEventFrame==-1 || lastEventFrame!=aMainTimeline.currentFrame) {
-	 						lastEventFrame = aMainTimeline.currentFrame;
-		 					trace('stopped');
-	 						aHandler(aMainTimeline);			
-	 					}
-	  			} else {
-	  				lastEventFrame = -1;
-	  			}
-	  			lastFrame = aMainTimeline.currentFrame;
-	  		}
-	 		);	//useWeakReferences would make sense here, but breaks event (don't know why)
+			var result: Function = function(aEvent: Event): void {
+				if ((!aWaitForLastFrame || (aMainTimeline.currentFrame==aMainTimeline.totalFrames)) && (lastFrame != -1) && (aMainTimeline.currentFrame==lastFrame)) {
+					if (lastEventFrame==-1 || lastEventFrame!=aMainTimeline.currentFrame) {
+						lastEventFrame = aMainTimeline.currentFrame;
+						trace('stopped');
+						aHandler(aMainTimeline);			
+					}
+				} else {
+					lastEventFrame = -1;
+				}
+				lastFrame = aMainTimeline.currentFrame;
+			}
+	  	aMainTimeline.addEventListener(Event.ENTER_FRAME,result); //useWeakReferences would make sense here, but breaks event (don't know why)
+			return result
 	  }
+		
+
+		public static function attachFrameRepeatHandler(aMovieClip: MovieClip,aFrameRepeatHandler: Function): Function {
+			var lastFrame: int = -1;
+			var hasMoved: Boolean = false
+			var result: Function = function(aEvent: Event): void {
+				if (lastFrame != -1) {
+					if (hasMoved && (aMovieClip.currentFrame==lastFrame)) {
+						aFrameRepeatHandler(aEvent);			
+					}
+					if (aMovieClip.currentFrame != lastFrame)
+						hasMoved = true;					
+				}
+				lastFrame = aMovieClip.currentFrame
+			}
+			aMovieClip.addEventListener(Event.ENTER_FRAME,result)
+			return result
+		}
+		
+		public static function callLater(aTime: Number,aHandler: Function): Timer {
+			var result: Timer = new Timer(aTime);
+			result.addEventListener(
+				TimerEvent.TIMER,
+				function(aEvent: Event): void {
+					result.stop()
+					result.removeEventListener(TimerEvent.TIMER,arguments.callee);
+					aHandler(aEvent)
+				}
+			)
+			result.start()
+			return result;
+		}
+	
+		public static function stopAllMovieClips(aMovieClip: MovieClip): void {
+			aMovieClip.stop();
+			for (var i:int = 0; i < aMovieClip.numChildren; i++) {
+				var dobj: DisplayObject = aMovieClip.getChildAt(i);
+				if (dobj is MovieClip) 
+					stopAllMovieClips(MovieClip(dobj));
+			}
+		}
+
+		public static function playAllMovieClips(aMovieClip: MovieClip): void {
+			aMovieClip.play();
+			for (var i:int = 0; i < aMovieClip.numChildren; i++) {
+				var dobj: DisplayObject = aMovieClip.getChildAt(i);
+				if (dobj is MovieClip) 
+					stopAllMovieClips(MovieClip(dobj));
+			}
+		}
 	}
 }

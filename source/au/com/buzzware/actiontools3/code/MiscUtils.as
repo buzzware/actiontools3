@@ -13,6 +13,7 @@ package au.com.buzzware.actiontools3.code {
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
+	import flash.events.TimerEvent;
 	import flash.utils.*;
 	
 	import mx.core.Application;
@@ -170,8 +171,14 @@ package au.com.buzzware.actiontools3.code {
       );			
 			return sc.join(' > ');
 		}
+		
+		public static function isSubclassOf(aChildClass:Class, aAncestorClass:Class):Boolean {
+			return aAncestorClass.prototype.isPrototypeOf(aChildClass.prototype)
+		}
 
-
+		public static function isObjectOfClass(aObject: Object, aClass: Class): Boolean {
+			return isSubclassOf(getClass(aObject),aClass)
+		}
 		
 /* 		public static function ClassOfObject(aObject: Object): Class {
 			
@@ -217,9 +224,9 @@ package au.com.buzzware.actiontools3.code {
 		}
 		
 		// call attachEventTracer(someComponent) to have all events dispatched by that component traced
-		public static function attachEventTracer(aTarget: IEventDispatcher): void {
+		public static function attachEventTracer(aTarget: IEventDispatcher=null): void {
 			UIComponent.mx_internal::dispatchEventHook = function(aEvent:Event, aComponent:UIComponent): void {
-				if (aComponent != aTarget)
+				if (aTarget && (aComponent != aTarget))
 					return;
 				TraceEvent(aEvent);
 			}
@@ -263,6 +270,10 @@ package au.com.buzzware.actiontools3.code {
 			for (var p:String in aSource)
 				result[p] = aSource[p];
 			return result
+		}
+		
+		public static function cloneArray(aArray: Array): Array {
+			return aArray.map(function(e:*, ...r):* { return e });			
 		}
 
 		// merges dynamic properties of aSource into aDest and returns the result
@@ -446,8 +457,53 @@ package au.com.buzzware.actiontools3.code {
 			return Math.floor(Math.random()*aRange)
 		}
 		
-		public static function randomIntRange(aFrom,aTo: int): int {
+		public static function randomIntRange(aFrom: int,aTo: int): int {
 			return aFrom+randomInt(aTo-aFrom+1)
-		}		
+		}
+		
+		public static function callLater(aTime: Number,aHandler: Function): Timer {
+			var result: Timer = new Timer(aTime);
+			result.addEventListener(
+				TimerEvent.TIMER,
+				function(aEvent: Event): void {
+					result.stop()
+					result.removeEventListener(TimerEvent.TIMER,arguments.callee);
+					aHandler(aEvent)
+				}
+			)
+			result.start()
+			return result;
+		}
+		
+		// adds listener and removes on first occurrence
+		public static function addOnceListener(aTarget: IEventDispatcher, aEventType: String, aEventHandler: Function): void {
+			aTarget.addEventListener(
+				aEventType,
+				function(aEvent: Event): void {
+					aTarget.removeEventListener(aEventType,arguments.callee)
+					aEventHandler(aEvent)
+				}
+			)
+		}
+		
+		// aTime is in milliseconds
+		// aHandler is like function(aEvent: TimerEvent): Boolean {} and is called until it returns true 
+		public static function callUntil(aTime: Number,aHandler: Function): Timer {
+			var result: Timer = new Timer(aTime);
+			result.addEventListener(
+				TimerEvent.TIMER,
+				function(aEvent: TimerEvent): void {
+					if (!result.running)
+						return;
+					var stop: Boolean = aHandler(aEvent)
+					if (stop) {
+						result.stop()
+						result.removeEventListener(TimerEvent.TIMER,arguments.callee);
+					}
+				}
+			)
+			result.start()
+			return result;
+		}
 	}
 }

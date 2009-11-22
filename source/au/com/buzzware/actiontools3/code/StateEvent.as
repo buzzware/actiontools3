@@ -1,5 +1,5 @@
-package
-{
+package au.com.buzzware.actiontools3.code {
+
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
 

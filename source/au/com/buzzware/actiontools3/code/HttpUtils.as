@@ -43,6 +43,8 @@ package au.com.buzzware.actiontools3.code {
 		public static function CombineUrl(aRoot: String,aPath: String): String {
 			if (!aPath)
 				return aRoot;
+			if (!aRoot)
+				return aPath;
 			var result: String;
 			if (IsRelative(aPath)) {
 				result = RemoveSlash(aRoot)+PrependSlash(aPath);

@@ -1,4 +1,5 @@
-package {
+package au.com.buzzware.actiontools3.code {
+
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
@@ -7,6 +8,7 @@ package {
 		protected var _queue: Array = [];
 		protected var _state: String;
 		protected var stateHandler: Function;
+		public var state: String;
 		
 		public function StateMachine(aParent: Object = null, aHandler: Function = null) {
 			addEventListener(StateEvent.PROCESS,processQueueEvent)
@@ -35,8 +37,10 @@ package {
 						return;
 					var sc: StateControl = new StateMachineControl();
 					sc.previousState = _state;
+					state = aEvent.state;
 					sc.state = aEvent.state;
 					sc.parameters = aEvent.parameters;
+					trace('* StateMachine.state: '+sc.state+' parameters: '+MiscUtils.DynamicPropertiesToString(aEvent.parameters,false))
 					stateHandler(sc);
 					_state = aEvent.state;
 					if (sc.nextState) {

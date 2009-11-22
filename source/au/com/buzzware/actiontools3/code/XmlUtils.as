@@ -28,6 +28,28 @@ package au.com.buzzware.actiontools3.code {
 				return null;
 		}
 		
+		public static function AsArray(aObject: Object): Array {
+			if (aObject is Array) {
+				return Array(aObject);
+			} else if (aObject is XML) {
+				return AsArray(XML(aObject).children())
+			} else if (aObject is XMLList) {
+				var list: XMLList = XMLList(aObject)
+				var result: Array = []
+				for (var i:int = 0; i<list.length(); i++) {
+					result.push(list[i])
+				}
+				return result
+			} else {
+				return null
+			}
+		}
+		
+		public static function NodeText(aObject: Object): String {
+			var node: XML = AsNode(aObject)
+			return node ? node.text() : null;
+		}
+		
 		// like as, returns null or valid XML node (excluding HTML etc loaded as XML nodes)
 		public static function AsXmlNode(aObject: Object): XML {
 			var x:XML = AsNode(aObject)
@@ -39,11 +61,11 @@ package au.com.buzzware.actiontools3.code {
 			return (aXML!=null && !IsHTML(aXML)) ? aXML : null;
 		}
 
-		public static function Attr(aXML: XML,aAttr: String): String {
+		public static function Attr(aXML: XML,aAttr: String,aDefault: String=null): String {
 			if (!aXML)
-				return null;
-			var result: String = aXML.attribute(aAttr)
-			return result && result!='' ? result : null
+				return aDefault;
+			var atts: XMLList = aXML.attribute(aAttr)
+			return (atts.length() > 0) ? atts[0].toString() : aDefault
 		}
 
 		// given a string or XML node, returns the root element.
@@ -56,6 +78,13 @@ package au.com.buzzware.actiontools3.code {
 				throw new Error("XML document corrupt or root tag not what was expected");
 			}
 			return root;
+		}
+		
+		public static function ensureChild(aNode: XML, aName: String): XML {
+			var child: XML = AsNode(aNode.child(aName))
+			if (!child)
+				child = aNode.appendChild(XML('<'+aName+ '/>'))
+			return child
 		}
 		
 		public static function nextSibling(aNode: XML): XML {
@@ -74,7 +103,7 @@ package au.com.buzzware.actiontools3.code {
 				return null;
 			var curr: XML = aCurrTag
 			do {
-				if ((!aFilter || aFilter(curr)) && (curr.children().length() > 0)) {
+				if (((aFilter==null) || aFilter(curr)) && (curr.children().length() > 0)) {
 					curr = XmlUtils.AsNode(curr.children()[0])
 				} else {
 					var sibling: XML = XmlUtils.nextSibling(curr)
@@ -403,5 +432,13 @@ package au.com.buzzware.actiontools3.code {
 				"$1=\"$2\""
 			)
 		}		
+		
+		public static function upToRoot(aXML: XML): XML {
+			var curr: XML = aXML;
+			var result: XML = curr
+			while (curr = curr.parent())
+				result = curr;
+			return result
+		}
 	}
 }
