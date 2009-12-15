@@ -52,6 +52,18 @@ package au.com.buzzware.actiontools3.air {
 			return (aFile.exists ? aFile : null)
 		}
 		
+		public static function fileMustExist(aFile: File): File {
+			if (!aFile)
+				return null
+			return ((aFile.exists && !aFile.isDirectory) ? aFile : null)
+		}
+		
+		public static function dirMustExist(aFile: File): File {
+			if (!aFile)
+				return null
+			return ((aFile.exists && aFile.isDirectory) ? aFile : null)
+		}
+		
 		public static function isWindowsPath(aPath: String): Boolean {
 			if (!aPath)
 				return null;
