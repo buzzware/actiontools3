@@ -30,7 +30,7 @@ package au.com.buzzware.actiontools3.code {
 		
 		public static function AsArray(aObject: Object): Array {
 			if (aObject is Array) {
-				return Array(aObject);
+				return aObject as Array;
 			} else if (aObject is XML) {
 				return AsArray(XML(aObject).children())
 			} else if (aObject is XMLList) {
@@ -82,8 +82,10 @@ package au.com.buzzware.actiontools3.code {
 		
 		public static function ensureChild(aNode: XML, aName: String): XML {
 			var child: XML = AsNode(aNode.child(aName))
-			if (!child)
-				child = aNode.appendChild(XML('<'+aName+ '/>'))
+			if (!child) {
+				child = XML('<'+aName+ '/>')
+				aNode.appendChild(child)
+			}
 			return child
 		}
 		
@@ -97,6 +99,13 @@ package au.com.buzzware.actiontools3.code {
 			else
 				return parent.children()[i]; 
 		}
+		
+		// why is this so hard ?
+		public static function removeNode(node:XML):void {
+		    if (!node || !node.parent())
+		    	return
+		    delete node.parent().children()[node.childIndex()]
+		}		
 		
 		public static function nextNested(aCurrTag: XML, aFilter: Function = null): XML {
 			if (!aCurrTag)

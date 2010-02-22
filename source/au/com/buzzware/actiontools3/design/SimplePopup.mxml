@@ -68,6 +68,8 @@
 		public static function ShowModalContent(aParent: DisplayObject, aContent: UIComponent): SimplePopup {
 			var result: SimplePopup = mx.managers.PopUpManager.createPopUp(aParent as DisplayObject, SimplePopup, true ) as SimplePopup;
 			result.addChild(aContent);
+			result.percentWidth = 80
+			result.percentHeight = 80
 			PopUpManager.centerPopUp(result);
 			return result;	
 		}

@@ -110,7 +110,7 @@ package au.com.buzzware.actiontools3.code {
 			for (var i:int = 0; i < aMovieClip.numChildren; i++) {
 				var dobj: DisplayObject = aMovieClip.getChildAt(i);
 				if (dobj is MovieClip) 
-					stopAllMovieClips(MovieClip(dobj));
+					playAllMovieClips(MovieClip(dobj));
 			}
 		}
 	}

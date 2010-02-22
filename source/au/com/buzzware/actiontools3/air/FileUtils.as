@@ -66,7 +66,7 @@ package au.com.buzzware.actiontools3.air {
 		
 		public static function isWindowsPath(aPath: String): Boolean {
 			if (!aPath)
-				return null;
+				return false;
 			var fwd: int;
 			var back: int;
 			for (var i:int = 0;i<aPath.length;i++) {

@@ -30,6 +30,7 @@ package au.com.buzzware.actiontools3.code {
 			return df.format(aDate);
 		}
 		
+		
 		// Format a number to specified number of decimal places
 		// Written by Robert Penner in May 2001 - www.robertpenner.com
 		// Optimized by Ben Glazer - ben@blinkonce.com - on June 8, 2001
@@ -47,8 +48,8 @@ package au.com.buzzware.actiontools3.code {
 		
 			// Round the number to specified decimal places
 			// e.g. 12.3456 to 3 digits (12.346) -> mult. by 1000, round, div. by 1000
-			var tenToPower = Math.pow(10, digits);
-			var cropped = String(Math.round(num * tenToPower));
+			var tenToPower: Number = Math.pow(10, digits);
+			var cropped: String = String(Math.round(num * tenToPower));  
 		
 			// Prepend zeros as appropriate for numbers between 0 and 1
 			if (num < 1) {
@@ -60,7 +61,7 @@ package au.com.buzzware.actiontools3.code {
 		
 			// Insert decimal point in appropriate place (this has the same effect
 			// as dividing by tenToPower, but preserves trailing zeros)
-			var roundedNumStr = cropped.slice(0, -digits) + "." + cropped.slice(-digits);
+			var roundedNumStr: String = cropped.slice(0, -digits) + "." + cropped.slice(-digits);
 			return roundedNumStr;
 		};
 
@@ -231,7 +232,7 @@ package au.com.buzzware.actiontools3.code {
 			return html.length==0 ? null : html[0];
 		}
 		
-		public static function split3(aString: String,aPattern: Object) {
+		public static function split3(aString: String,aPattern: Object): Array {
 			var search: int = aString.search(aPattern)
 			if (search==-1)
 				return ['',null,aString];
